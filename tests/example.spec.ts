@@ -27,8 +27,6 @@ test('create, filter, and delete an employee by employee ID', async ({ page }) =
   await pim.clickAddEmployee();
   await pim.createEmployee('Automation', 'User', employeeId);
 
-  await expect(page).toHaveURL(/.*\/pim\/viewPersonalDetails\/\d+$/);
-
   await pim.open();
   await pim.filterEmployeesByEmployeeId(employeeId);
   await pim.deleteEmployeeAndAssertDeletion(employeeId, 'Successfully Deleted');

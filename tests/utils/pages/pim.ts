@@ -22,12 +22,12 @@ export class PIMPage {
     this.pimMenu = page.getByRole('link', { name: 'PIM' });
     this.employeeListHeader = page.getByRole('heading', { name: 'Employee Information' });
     this.addEmployeeButton = page.getByRole('button', { name: 'Add' });
-    this.firstNameInput = page.getByLabel('First Name');
-    this.lastNameInput = page.getByLabel('Last Name');
-    this.employeeIdInput = page.getByLabel('Employee Id');
+    this.firstNameInput = page.locator('input[name="firstName"]');
+    this.lastNameInput = page.locator('input[name="lastName"]');
+    this.employeeIdInput = page.locator('input[class*="oxd-input"]').nth(2);
     this.saveButton = page.getByRole('button', { name: 'Save' });
-    this.employeeIdFilterInput = page.getByLabel('Employee Id');
-    this.employeeNameFilterInput = page.getByLabel('Employee Name');
+    this.employeeIdFilterInput = page.locator('input[placeholder="Type for hints..."]').nth(1);
+    this.employeeNameFilterInput = page.locator('input[placeholder="Type for hints..."]').nth(0);
     this.searchButton = page.getByRole('button', { name: 'Search' });
     this.resetButton = page.getByRole('button', { name: 'Reset' });
     this.deleteButton = page.getByRole('button', { name: 'Delete' });
