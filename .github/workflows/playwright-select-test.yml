@@ -1,0 +1,51 @@
+name: Playwright Selected Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_path:
+        description: 'Path to the test file or folder to run, e.g. tests/example.spec.ts'
+        required: true
+        default: tests/example.spec.ts
+        type: string
+      project:
+        description: 'Playwright project to run against'
+        required: false
+        default: chromium
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+
+jobs:
+  selected-test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps ${{ inputs.project }}
+
+      - name: Run selected test
+        run: npx playwright test ${{ inputs.test_path }} --project=${{ inputs.project }}
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-selected-report
+          path: playwright-report/
+          if-no-files-found: ignore
