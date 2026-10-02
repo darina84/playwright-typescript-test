@@ -9,11 +9,10 @@ export class PIMPage {
   readonly lastNameInput: Locator;
   readonly employeeIdInput: Locator;
   readonly saveButton: Locator;
-  readonly searchEmployeeInput: Locator;
+  readonly employeeIdFilterInput: Locator;
+  readonly employeeNameFilterInput: Locator;
   readonly searchButton: Locator;
   readonly resetButton: Locator;
-  readonly employeeRecordsTable: Locator;
-  readonly employeeIdFilterInput: Locator;
   readonly deleteButton: Locator;
   readonly confirmDeleteButton: Locator;
   readonly noRecordsFoundText: Locator;
@@ -27,11 +26,10 @@ export class PIMPage {
     this.lastNameInput = page.locator('input[name="lastName"]');
     this.employeeIdInput = page.locator('input[class*="oxd-input"]').nth(2);
     this.saveButton = page.getByRole('button', { name: 'Save' });
-    this.searchEmployeeInput = page.locator('input[placeholder="Type for hints..."]');
+    this.employeeIdFilterInput = page.locator('input[placeholder="Type for hints..."]').nth(1);
+    this.employeeNameFilterInput = page.locator('input[placeholder="Type for hints..."]').nth(0);
     this.searchButton = page.getByRole('button', { name: 'Search' });
     this.resetButton = page.getByRole('button', { name: 'Reset' });
-    this.employeeRecordsTable = page.locator('.oxd-table');
-    this.employeeIdFilterInput = page.locator('input[placeholder="Type for hints..."]').nth(0);
     this.deleteButton = page.getByRole('button', { name: 'Delete' });
     this.confirmDeleteButton = page.getByRole('button', { name: 'Yes, Delete' });
     this.noRecordsFoundText = page.getByText('No Records Found');
@@ -62,22 +60,21 @@ export class PIMPage {
     await this.saveButton.click();
   }
 
-  async searchEmployee(name: string) {
-    await this.searchEmployeeInput.fill(name);
-    await this.searchButton.click();
-  }
-
-  async filterEmployeesByEmployeeId(employeeId: number) {
+  async filterEmployeesByEmployeeId(employeeId: number | string) {
     await this.employeeIdFilterInput.fill(String(employeeId));
     await this.searchButton.click();
+    await expect(this.page.locator('.oxd-table-card')).toContainText(String(employeeId));
   }
 
-  async deleteEmployeeAndAssertDeletion(test: string) {
-    await this.page.getByRole('checkbox').nth(0).check();
+  async deleteEmployeeAndAssertDeletion(employeeId: number | string, successMessage = 'Successfully Deleted') {
+    const employeeRow = this.page.locator('.oxd-table-card').filter({ hasText: String(employeeId) });
+
+    await expect(employeeRow).toBeVisible();
+    await employeeRow.locator('input[type="checkbox"]').check();
     await this.deleteButton.click();
     await this.confirmDeleteButton.click();
 
-    await expect(this.page.getByText(test)).toBeVisible();
+    await expect(this.page.getByText(successMessage)).toBeVisible();
     await expect(this.noRecordsFoundText).toBeVisible();
   }
 
