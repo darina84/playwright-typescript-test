@@ -3,6 +3,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 export class PIMPage {
   readonly page: Page;
   readonly pimMenu: Locator;
+  readonly employeeListLink: Locator;
   readonly employeeListHeader: Locator;
   readonly addEmployeeButton: Locator;
   readonly firstNameInput: Locator;
@@ -19,6 +20,7 @@ export class PIMPage {
   constructor(page: Page) {
     this.page = page;
     this.pimMenu = page.getByRole('link', { name: 'PIM' });
+    this.employeeListLink = page.getByRole('link', { name: 'Employee List' });
     this.employeeListHeader = page.getByRole('heading', { name: 'Employee Information' });
     this.addEmployeeButton = page.getByRole('button', { name: 'Add' });
     this.firstNameInput = page.locator('input[name="firstName"]');
@@ -35,7 +37,7 @@ export class PIMPage {
     this.employeeNameFilterInput = page.locator('input[placeholder="Type for hints..."]').nth(0);
     this.searchButton = page.getByRole('button', { name: 'Search' });
     this.resetButton = page.getByRole('button', { name: 'Reset' });
-    this.deleteButton = page.getByRole('button', { name: 'Delete' });
+    this.deleteButton = page.getByRole('button', { name: 'Delete Selected' });
     this.confirmDeleteButton = page.getByRole('button', { name: 'Yes, Delete' });
   }
 
@@ -45,7 +47,12 @@ export class PIMPage {
   }
 
   async open() {
-    await this.pimMenu.click();
+    if (await this.employeeListLink.isVisible()) {
+      await this.employeeListLink.click();
+    } else {
+      await this.pimMenu.click();
+      await this.employeeListLink.click();
+    }
     await this.employeeListHeader.waitFor({ state: 'visible' });
   }
 
@@ -61,8 +68,10 @@ export class PIMPage {
       await this.employeeIdInput.fill(employeeId);
     }
 
-    await this.saveButton.click();
-    await expect(this.page.getByText('Successfully Saved', { exact: true })).toBeVisible();
+    await Promise.all([
+      this.page.waitForURL(/\/pim\/viewPersonalDetails\/empNumber\/\d+$/),
+      this.saveButton.click(),
+    ]);
   }
 
   async filterEmployeesByEmployeeId(employeeId: number | string) {
