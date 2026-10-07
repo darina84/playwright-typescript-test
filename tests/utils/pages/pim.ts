@@ -15,7 +15,6 @@ export class PIMPage {
   readonly resetButton: Locator;
   readonly deleteButton: Locator;
   readonly confirmDeleteButton: Locator;
-  readonly noRecordsFoundText: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -24,15 +23,20 @@ export class PIMPage {
     this.addEmployeeButton = page.getByRole('button', { name: 'Add' });
     this.firstNameInput = page.locator('input[name="firstName"]');
     this.lastNameInput = page.locator('input[name="lastName"]');
-    this.employeeIdInput = page.locator('input[class*="oxd-input"]').nth(2);
+    this.employeeIdInput = page
+      .locator('.oxd-input-group')
+      .filter({ has: page.getByText('Employee Id', { exact: true }) })
+      .locator('input');
     this.saveButton = page.getByRole('button', { name: 'Save' });
-    this.employeeIdFilterInput = page.locator('input[placeholder="Type for hints..."]').nth(1);
+    this.employeeIdFilterInput = page
+      .locator('.oxd-input-group')
+      .filter({ has: page.getByText('Employee Id', { exact: true }) })
+      .locator('input');
     this.employeeNameFilterInput = page.locator('input[placeholder="Type for hints..."]').nth(0);
     this.searchButton = page.getByRole('button', { name: 'Search' });
     this.resetButton = page.getByRole('button', { name: 'Reset' });
     this.deleteButton = page.getByRole('button', { name: 'Delete' });
     this.confirmDeleteButton = page.getByRole('button', { name: 'Yes, Delete' });
-    this.noRecordsFoundText = page.getByText('No Records Found');
   }
 
   async goto() {
@@ -58,24 +62,28 @@ export class PIMPage {
     }
 
     await this.saveButton.click();
+    await expect(this.page.getByText('Successfully Saved', { exact: true })).toBeVisible();
   }
 
   async filterEmployeesByEmployeeId(employeeId: number | string) {
     await this.employeeIdFilterInput.fill(String(employeeId));
     await this.searchButton.click();
-    await expect(this.page.locator('.oxd-table-card')).toContainText(String(employeeId));
+    const employeeRow = this.page
+      .locator('.oxd-table-card')
+      .filter({ has: this.page.getByText(String(employeeId), { exact: true }) });
+    await expect(employeeRow).toHaveCount(1);
   }
 
   async deleteEmployeeAndAssertDeletion(employeeId: number | string, successMessage = 'Successfully Deleted') {
     const employeeRow = this.page.locator('.oxd-table-card').filter({ hasText: String(employeeId) });
 
     await expect(employeeRow).toBeVisible();
-    await employeeRow.locator('input[type="checkbox"]').check();
+    await employeeRow.getByRole('checkbox').check({ force: true });
     await this.deleteButton.click();
     await this.confirmDeleteButton.click();
 
     await expect(this.page.getByText(successMessage)).toBeVisible();
-    await expect(this.noRecordsFoundText).toBeVisible();
+    await expect(employeeRow).toHaveCount(0);
   }
 
   async expectPimPage() {
